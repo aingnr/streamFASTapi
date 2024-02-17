@@ -37,25 +37,28 @@ def main():
 
     st.header("chat.나의약사 🤖")
 
-    # sidebar with user input
-    with st.sidebar:
-        user_input = st.text_input("Your message: ", key="user_input")
-
-        # handle user input
-        if user_input:
-            st.session_state.messages.append(HumanMessage(content=user_input))
-            with st.spinner("Thinking..."):
-                response = chat(st.session_state.messages)
-            st.session_state.messages.append(
-                AIMessage(content=response.content))
-
-    # display message history
+    # Display message history
     messages = st.session_state.get('messages', [])
-    for i, msg in enumerate(messages[1:]):
-        if i % 2 == 0:
-            message(msg.content, is_user=True, key=str(i) + '_user')
+    for i, msg in enumerate(messages):
+        if isinstance(msg, HumanMessage):
+            message(msg.content, is_user=True)
         else:
-            message(msg.content, is_user=False, key=str(i) + '_ai')
+            message(msg.content, is_user=False)
+
+    # User input at the bottom
+    user_input = st.text_input("Your message:", key="user_input")
+    send_button = st.button("Send")
+
+    # handle user input
+    if send_button and user_input:
+        st.session_state.messages.append(HumanMessage(content=user_input))
+        with st.spinner("Thinking..."):
+            # response = chat(st.session_state.messages)
+            response = chat.invoke(messages)
+        st.session_state.messages.append(AIMessage(content=response.content))
+        # 입력 필드를 비우는 대신 사용자 입력을 처리한 후 페이지를 새로 고침
+        # st.session_state.user_input = ""  # 이 줄을 제거
+        st.rerun()  # 페이지를 새로 고침하여 입력 필드를 초기화
 
 if __name__ == '__main__':
     main()
